@@ -5,37 +5,21 @@ module.exports = {
         if (params.password) {
             var pwd = store.get('password');
             if (!pwd.legitpassword) {
-                return { ok: false, error: "Not registered"  };
+                return { error: "Not registered"  };
             }
             if (store.get('password').legitpassword == params.password) {
                 store.set('status', { logged: true });
                 return { ok: true };
             }
         }
-        return { ok: false, error: "Incorrect password" };
+        return { error: "Incorrect password" };
     },
 
-    logout: function(userStatus) {
-        if (userStatus.logged) {
-
+    logout: function() {
+        if (!this.islogged()) {
+            return { error: "Not logged." };
         }
-    },
-
-    register: function(params) {
-        if (params.password) {
-            if (store.get('register').count) {
-                if (store.get('register').count == 1) {
-                    return { ok: false, error: "Already registered." };
-                }
-            }
-
-            store.set('password', { legitpassword: params.password });
-            store.set('register', { count: 1 });
-            store.set('coins', { list: [] });
-
-            return { ok: true };
-        }
-        return { ok: false, error: "Incorrect password" };
+        store.set('status', { logged: false });
     },
 
     islogged: function() {
@@ -44,9 +28,76 @@ module.exports = {
         return false;
     },
 
+    register: function(params) {
+        if (this.islogged()) {
+            return { error: "Already logged." };
+        }
+
+        if (params) {
+            if (params.password) {
+                if (store.get('register').count) {
+                    if (store.get('register').count == 1) {
+                        return { ok: false, error: "Already registered." };
+                    }
+                }
+
+                store.set('password', { legitpassword: params.password });
+                store.set('register', { count: 1 });
+                store.set('coins', { list: [] });
+                store.set('tx', { list: [] });
+
+                return { ok: true };
+            }
+            return { ok: false, error: "Incorrect password" };
+        }
+    },
 
     newaddress: function(params) {
-        
+        if (!this.islogged()) {
+            return { error: "Not logged." };
+        }
+        if (params) {
+            if (!params.coin) {
+                return { error: "Missing params."  };
+            }
+
+            var ucoin = this.getcoin({coin});
+
+            if (!ucoin) {
+                return { error: "This is coin is not in your list."};
+            }
+            if (ucoin.error) {
+                return { error: ucoin.error };
+            }
+
+            var list = store.get('coins').list;
+            
+            try {
+                var n = 0;
+                _.each(list, function(err,value) {
+                    if (value.asset == params.coin) {
+                        throw n;
+                    }
+                    n += 1;
+                });
+            }catch(n) {
+                var hdpriv = ucoin.hdprivkey;
+                var hdderiv = ucoin.hdderiv;
+                var derived = hdpriv.derive("m/0'/0'/0'/"+hdderiv);
+    
+                //address only
+                var address = derived.privateKey.toAddress();
+                var privkey = derived.privateKey.toWIF();
+                var pubkey = derived.privateKey.toPublicKey();
+    
+                list[n].hdderiv += 1;
+                list[n].address.push_back({address,privkey,pubkey});
+
+                store.set('coins',{ list });
+                return { address };
+            }
+        }
+        return {ok: false, error: "Missing params." };
     },
 
     neworder: function(params) {
@@ -76,23 +127,41 @@ module.exports = {
                 }
 
                 var db = require('../db');
-                var crypto = require('crypto');
-                var commonProof = 
-                ucoin.orders.push_back()
+                var crypt = require('../utils').crypt;
+
+                //witness wont sign orders with 0 pubkeys supplied
+                var pubkeyList = this.getpubkeylist({coin});  
+                if (pubkeyList.length == 0) {
+                    return { error: "Insecure order."};
+                }
+
+                var order = {
+                    price: price,
+                    amount: amount,
+                    chain: db.chain.common_chain,
+                    addresslist: pubkeyList,
+                    ts: Date.now(),
+                };
+
+                var id = ucoin.orders.length+1;
+                var proof = crypt.encrypt(JSON.stringify(order)+':'+coin, db.chain.common_chain);
+                ucoin.orders.push_back({ id, order: proof, signatures: [] });
                 //after sign this order and proof our common chain
-                //we send it to witnesses ( check min )
-                //they sign, and send it back.
-                //so we can trade it safer later,
-                //cause we'll need to proof that we wont send
+                //we send it to witnesses
+                //they sign, and send it back, so we collect signatures.
+                //and we can trade it safer later
+                //cause we'll need to proof that we wont trade
                 //orders that dont combine
                 //with previously signed order.
-                return 
+                //* witness dont access orders only signs them.
+                //signatures are hardcoded, so we cant change it, or insert invalid orders.
+                //sellers will verify buyer order <--> buyer will verify seller order.
+                return { id };
             }
         } else {
             return { error: "Invalid params."  };
         }
     },
-
 
     getcoin: function(params) {
         if (!this.islogged()) {
@@ -162,7 +231,7 @@ module.exports = {
                             var hdpub = hdpriv.hdPublicKey;
 
                             //last one is the derivation
-                            var derived = hdPrivateKey.derive("m/0'/0'/0'/0");
+                            var derived = hdpriv.derive("m/0'/0'/0'/0");
 
                             //address only
                             var address = derived.privateKey.toAddress();
@@ -197,15 +266,51 @@ module.exports = {
         });
     },
 
-    updatetransactions(coin) {
+    updatetransactions(params) {
+        
+        if (!this.islogged()) {
+            return { error: "Not logged." };
+        }
+        if (!params) {
+            return { error: "Missing params."};
+        }
+        if (!params.coin || !params.tx || !params.amount || !params.inout) {
+            return { error: "Missing params."};
+        }
+        
+        var tx = {
+            coin: params.coin,
+            tx: params.tx,
+            amount: params.amount,
+            inOut: params.inout
+        };
+
+        var txlist = store.get('tx').list;
+        if (!txlist) {
+            store.set('tx',{ list: [] });
+        }
+        txlist = store.get('tx').list;
+        txlist.push_back(tx);
+        store.set('tx',{ list: txlist });
+    },
+
+    createtransaction(params) {
+        if (!this.islogged()) {
+            return { error: "Not logged." };
+        }
+        if (!params) {
+            return { error: "Missing params."};
+        }
+        if (!params.coin || !params.tx || !params.amount) {
+            return { error: "Missing params."};
+        }
+    },
+
+    signtransaction(params) {
 
     },
 
-    createtransaction(coin,tx) {
+    makeorder(params) {
 
-    },
-
-    signtransaction(coin,tx) {
-
-    },
+    }
 };

@@ -15,6 +15,7 @@ const electron = require('electron'),
   numCPUs = require('os').cpus().length,
   killmm = require('./killmm'),
   request = require('request'),
+  store = require('../store'),
   { ipcMain } = require('electron');
 
 var ps = require('ps-node'),
@@ -102,22 +103,49 @@ ipcMain.on('shepherd-command', (event, arg) => {
 
     case 'login':
       console.log(BarterDEXBin + '\n' + BarterDEXDir);
-      event.returnValue = 'Logged In';
-      //const _passphrase = 'scatter quote stumble confirm extra jacket lens abuse gesture soda rebel seed nature achieve hurt shoot farm middle venture fault mesh crew upset cotton';
-      //StartMarketMaker({ "passphrase": arg.passphrase });
+
+      var r = store.login({password: arg.passphrase});
+      if (r.error) {
+        console.log(r.error);
+        event.returnValue =  'error';
+      } else {
+        event.returnValue = 'Logged In';
+      }
       break;
 
     case 'logout':
-      //killmm(true);
-      event.returnValue = 'Logged Out';
+      var r = store.logout();
+      if (r.error) {
+        console.log(r.error);
+        event.returnValue =  'error';
+      } else {
+        event.returnValue = 'Log out';
+      }
       break;
 
     case 'mmstatus':
-      //portscanner.checkPortStatus(7783, '127.0.0.1', function (error, status) {
-      //  console.log(status)
-      //  event.returnValue = status;
-      //})
       break;
+    
+    case 'witness_new_order':
+      if (!arg.coin || !arg.price || !arg.amount) {
+        event.returnValue =  'error';
+      } else {
+        var r = store.neworder({coin: arg.coin, price: arg.price, amount: arg.amount});
+        if (r.error) {
+          event.returnValue =  'error';
+        } else {
+          event.returnValue = 'Order created, sending to witnesses';
+        }
+      }
+    break;
+
+    case 'witness_validate_order':
+      break;
+
+    case 'witness_update_order':
+      if (arg.data)
+      break;
+
 
     case 'update_zeroconf_log':
       UpdateZeroConfLogs(arg.data);
@@ -245,44 +273,7 @@ ipcMain.on('shepherd-command', (event, arg) => {
 
 
 StartMarketMaker = function (data) {
-  /*
-  try {
-    
-    //Delete coins.json file so that BarterDEX always gets the same copy of coins.json from default file.
-    //Disable this line when coinsDB feature is enabled.
-    //fs.unlink(BarterDEXDir + '/coins.json');
-    // check if marketmaker instance is already running
-    portscanner.checkPortStatus(7783, '127.0.0.1', function (error, status) {
-      // Status is 'open' if currently in use or 'closed' if available
-      if (status === 'closed') {
-        const _coinsListFile = BarterDEXDir + '/coins.json'
 
-        fs.pathExists(_coinsListFile, (err, exists) => {
-          if (exists === true) {
-            console.log('file exist');
-            var coinslist_filedata = fs.readJsonSync(_coinsListFile, { throws: false });
-            data.coinslist = ProcessCoinsList(coinslist_filedata);
-            // data.coinslist is not used under Windows, if coins.json already exists
-            // it will be directly used by marketmaker
-            ExecMarketMaker(data);
-          } else if (exists === false) {
-            console.log('file doesn\'t exist');
-            fs.copy(defaultCoinsListFile, _coinsListFile)
-              .then(() => {
-                console.log('file copied!')
-                var coinslist_filedata = fs.readJsonSync(_coinsListFile, { throws: false });
-                data.coinslist = ProcessCoinsList(coinslist_filedata);
-                if (os.platform() === 'win32') { fs.writeJsonSync(_coinsListFile, data.coinslist); } // ver.2
-                ExecMarketMaker(data);
-              })
-              .catch(err => { console.error(err) })
-          }
-          if (err) { console.error(err) } // => null
-        })
-      } else { console.error(`port 7783 marketmaker is already in use`); }
-    });
-  } catch (e) { console.error(`failed to start marketmaker err: ${e}`); }
-  */
 }
 
 let mmid;

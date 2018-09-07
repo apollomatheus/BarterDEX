@@ -26,7 +26,6 @@ $('.btn_coindashboard_exchange').click(function (e) {
 	console.log($(this).data());
 
 	var selected_coin = JSON.parse(sessionStorage.getItem('mm_selectedcoin'));
-	console.log(selected_coin);
 	var coin = selected_coin.coin;
 
 	$('.screen-coindashboard').hide()
@@ -34,15 +33,9 @@ $('.btn_coindashboard_exchange').click(function (e) {
 	$('.coin_ticker').html(coin);
 
 	$.each($('.coinexchange[data-coin]'), function (index, value) {
-		//$('.coinexchange[data-coin]').attr('data-coin', coin);
 		$('.coinexchange[data-coin]').data('coin', coin);
 	});
 
-	/*$('.btn-exchangeclose').attr('data-coin', coin);
-	$('.btn-exchangerefresh').attr('data-coin', coin);
-	$('.btn-myordersrefresh').attr('data-coin', coin);
-	$('.btn-botlistrefresh').attr('data-coin', coin);
-	$('.btn-refreshtrading_pair').attr('data-coin', coin);*/
 	check_coin_balance(false);
 	CheckOrderBookFn();
 	CheckOrderbook_Interval = setInterval(CheckOrderBookFn, 30000);
@@ -76,17 +69,17 @@ $('.btn-exchangeclose').click(function (e) {
 	$('.screen-exchange').hide();
 	$('.screen-portfolio').show();
 	CheckOrderBookFn(false);
-	check_swap_status(false);
-	check_bot_list(false);
+	//check_swap_status(false);
+	//check_bot_list(false);
 	check_my_prices(false);
-	bot_screen_coin_balance(false);
-	bot_screen_sellcoin_balance(false);
+	//bot_screen_coin_balance(false);
+	//bot_screen_sellcoin_balance(false);
 	Refresh_active_StockChart(false);
 	//check_coin_balance_Interval = setInterval(check_coin_balance(),3000);
 	//check_coin_balance();
 
 	$('.porfolio_coins_list tbody').empty();
-	var actiavte_portfolio_coins_list_spinner = ''
+	var actiavte_portfolio_coins_list_spinner = '';
 	actiavte_portfolio_coins_list_spinner += '<th colspan="7">';
 	actiavte_portfolio_coins_list_spinner += '<div style="text-align: center; height: 100px;">';
 	actiavte_portfolio_coins_list_spinner += '<svg id="portfolio-coins-spinner">';
@@ -1713,6 +1706,10 @@ $('.porfolio_coins_list').on('click', '.btn_portfolio_send', function () {
 
 
 function CheckPortfolioFn(sig) {
+	clearInterval(CheckPortfolio_Interval);
+	return 'Check portfolio calls stopped.';
+
+	/*
 	if (sig == false) {
 		clearInterval(CheckPortfolio_Interval);
 		return 'Check portfolio calls stopped.';
@@ -1761,6 +1758,7 @@ function CheckPortfolioFn(sig) {
 		// If fail
 		console.log(textStatus + ': ' + errorThrown);
 	});
+	*/
 }
 
 
@@ -1773,7 +1771,7 @@ function PortfolioTblDataFn(portfolio_tbl_data) {
 		$('#portfolio-coins-spinner').hide();
 	}
 
-	$('.portfolio_kmd_equiv').html(portfolio_tbl_data.kmd_equiv);
+	//$('.portfolio_kmd_equiv').html(portfolio_tbl_data.kmd_equiv);
 	$('.portfolio_buycoin').html(portfolio_tbl_data.buycoin);
 	$('.portfolio_buyforce').html(portfolio_tbl_data.buyforce);
 	$('.portfolio_sellcoin').html(portfolio_tbl_data.sellcoin);
@@ -5159,6 +5157,7 @@ function get_swapstatus_step(swap_data) {
 
 
 function check_swap_status(sig) {
+	
 	if (sig == false) {
 		clearInterval(check_swap_status_Interval);
 		return
