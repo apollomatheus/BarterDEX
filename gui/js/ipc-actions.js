@@ -19,7 +19,7 @@ $(document).ready(function () {
 
 	///// Get App Version from Shpepherd IPC and update App Title //////
 	var barterDEX_app_info = ShepherdIPC({ "command": "app_info" });
-	document.title = 'BarterDEX - ' + barterDEX_app_info.app_version;
+	document.title = 'ZCoreDEX - ' + barterDEX_app_info.app_version;
 	
 	setTimeout(function () {
 		var mypubkey = sessionStorage.getItem('mm_mypubkey');

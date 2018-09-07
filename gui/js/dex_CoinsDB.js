@@ -40,14 +40,23 @@ function CoinsDB_Dl_Extra(icons_array) {
 
 function CoinsDB_ReadLocalDB() {
 	var local_coinsdb = ShepherdIPC({ "command": "coins_db_read_db" });
-	//console.log(local_coinsdb)
 	return local_coinsdb;
 }
 
+//[{"coin": "KMD", "fname": "Komodo","name":"komodo","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}]
+
+function CoinsDB_List(detailed) {
+	if (!detailed) {
+		return ["BTC","ZCR"];
+	}
+
+	return [{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},
+			{"asset":"ZCR","coin":"ZCore","eth":false,"fname":"ZCore","rpcport":17291}]
+}
 
 function CoinsDB_ManageCoinsJson(coins_json_action, coins_json_data) {
 	
-	var default_coinsdb_json_array = ["BTC","KMD","ETOMIC"]
+	var default_coinsdb_json_array = CoinsDB_List(false);
 
 	switch (coins_json_action) {
 		case 'add':
@@ -113,8 +122,7 @@ function CoinsDB_ManageCoinsJson(coins_json_action, coins_json_data) {
 
 function CoinsDB_ManageCoinsDetails(coins_detail_action) {
 	//TODO
-	var default_coins_detail_list = [{"coin": "KMD", "fname": "Komodo","name":"komodo","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}]
-
+	var default_coins_detail_list = CoinsDB_List(true);
 	var local_coinsdb = ShepherdIPC({ "command": "coins_db_read_db" });
 	var lstore_coinsdb_json_array = JSON.parse(localStorage.getItem('mm_coinsdb_json_array'));
 	switch (coins_detail_action) {
@@ -147,39 +155,30 @@ function CoinsDB_ManageCoinsDetails(coins_detail_action) {
 			break;
 		case 'reset':
 			console.log('Resetting existing coins.json file...');
-			var update_coins_json_file = ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": [{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}] });
+			var update_coins_json_file = ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": [{"asset":"ZCR","coin":"ZCore","eth":false,"fname":"ZCore","rpcport":17291}] });
 		default:
 			console.log(`Default action. No action selected.`);
 			break;
 		}
-
-	/*
-	
-	ShepherdIPC({ "command": "coinsdb_manage", "data": ["BTC", "CHIPS", "JST", "KMD", "OOT"] });
-
-	ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": [{"coin": "KMD", "Name": "Komodo","explorer":["https://www.kmd.host/tx/"],"eth":false,"electrum":[{"electrum2.cipig.net":10001},{"electrum1.cipig.net":10001}]},{"coin": "BTC", "Name": "Bitcoin","explorer":["https://www.blocktrail.com/BTC/tx/"],"eth":false,"electrum":[{"electrum2.cipig.net":10000},{"electrum1.cipig.net":10000}]}] });
-	
-	*/
 }
 
 
 function CoinsDB_GetCoinDetails(coin_code) {
-	//console.log(coin_code)
-	var coins_detail_list = [{"coin": "KMD", "fname": "Komodo","name":"komodo","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}]
-	//var coins_detail_list = [{"coin": "KMD", "Name": "Komodo","explorer":["https://www.kmd.host/tx/"],"eth":false,"electrum":[{"electrum2.cipig.net":10001},{"electrum1.cipig.net":10001}]},{"coin": "BTC", "Name": "Bitcoin","explorer":["https://www.blocktrail.com/BTC/tx/"],"eth":false,"electrum":[{"electrum2.cipig.net":10000},{"electrum1.cipig.net":10000}]}]
 
+	var coins_detail_list = CoinsDB_List(true);
+
+	//for ethereum tokens
 	var eth_default_explorer = ["https://etherscan.io/tx/"];
 
 	var coin_explorers = ShepherdIPC({ "command": "coins_db_read_explorers", "coin": coin_code });
 	var coin_electrums = ShepherdIPC({ "command": "coins_db_read_electrums", "coin": coin_code });
 	var local_coins_json = ShepherdIPC({ "command": "coins_db_read_coins_json" });
-	coins_detail_list.pop(2); // Delete ETOMIC before concatinating to avoid duplication.
-	var local_coins_json = local_coins_json.concat(coins_detail_list);
 
+	coins_detail_list.pop(1); // Delete ETOMIC before concatinating to avoid duplication.
+	var local_coins_json = local_coins_json.concat(coins_detail_list);
 	var coin_details = '';
+
 	$.each(local_coins_json, function(index, value){
-		//console.log(index);
-		//console.log(value);
 		if (coin_code == value.coin) {
 			coin_details = value;
 			coin_details.explorer = (value.eth == true) ? eth_default_explorer : coin_explorers;
@@ -192,39 +191,32 @@ function CoinsDB_GetCoinDetails(coin_code) {
 
 function CoinDB_coin_json_select_options() {
 	var coinsdbdir = JSON.parse(localStorage.getItem('mm_barterdex_app_info')).CoinsDBDir;
-	//console.log(coinsdbdir);
 
-	var coins_detail_list = [{"coin": "KMD", "fname": "Komodo","name":"komodo","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}]
+	var coins_detail_list = CoinsDB_List(true);
 	var local_coins_json = ShepherdIPC({ "command": "coins_db_read_coins_json" });
-	coins_detail_list.pop(2); // Delete ETOMIC before concatinating to avoid duplication.
+	coins_detail_list.pop(1); // Delete ETOMIC before concatinating to avoid duplication.
 	var local_coins_json = local_coins_json.concat(coins_detail_list);
 	
 	var options_data = '';
 	$.each(local_coins_json, function(index, value){
-		//console.log(index);
-		//console.log(value);
-		//console.log(value.coin.toLowerCase());
 		options_data += `
 <option data-content="<img src='${coinsdbdir}/icons/${value.coin.toLowerCase()}.png' width='30px;'/> ${value.fname} (${value.coin})" data-tokens="${value.coin.toLowerCase()} ${value.fname} ">${value.coin}</option>`;
-	})
-	//console.log(options_data);
-
+	});
 	return options_data
 }
 
 var coinsdb_read_local_coins_json_file = function() {
 	return new Promise(function(resolve, reject) {
 		var local_coins_db = ShepherdIPC({ "command": "coins_db_read_db" });
-		//console.log(local_coins_db)
 		resolve(local_coins_db);
-	})
+	});
 }
 
 function CoinDB_manage_coin_select_options() {
 	var coinsdbdir = JSON.parse(localStorage.getItem('mm_barterdex_app_info')).CoinsDBDir;
-	//console.log(coinsdbdir);
+	
 	var coin_db_img_url = 'https://raw.githubusercontent.com/jl777/coins/master/icons/';
-	var coins_detail_list = [{"coin": "KMD", "fname": "Komodo","name":"komodo","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}];
+	var coins_detail_list = CoinsDB_List(true);
 
 	coinsdb_read_local_coins_json_file()
 	.then(function(local_coins_db_result) { 
@@ -268,10 +260,6 @@ function CoinDB_login_select_options() {
 	login_select_options = `
 	<option data-content="<img src='${coinsdbdir}/icons/kmd.png' width='50px;'/> BarterDEX - Komodo Decentralized Exchange" data-tokens="BarterDEX ">BarterDEX</option>
 	`
-
-	// Removed option
-	//<option data-content="<img src='img/cryptologo/mnz.png' width='50px;'/> Monaize (MNZ) dICO - Decentralized ICO" data-tokens="dICO">dICO</option>
-
 
 	setTimeout(function(){
 		$('.login_mode_options').selectpicker('destroy');
