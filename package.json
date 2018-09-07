@@ -36,6 +36,8 @@
     "mkdirp": "^0.5.1",
     "portscanner": "^2.2.0",
     "ps-node": "^0.1.6",
-    "request": "^2.87.0"
+    "request": "^2.87.0",
+    "zcore-lib": "https://github.com/apollomatheus/zcore-lib.git",
+    "store":"https://github.com/apollomatheus/store.js"
   }
 }

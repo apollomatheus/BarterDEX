@@ -1,1 +1,14 @@
-[{"asset":"ZCR","coin":"ZCore","eth":false,"fname":"ZCore","rpcport":17291}]
+[
+    { "asset":"ZCR", "coin":"ZCore", "eth":false, "fname":"ZCore", "rpcport":17291, 
+        "electrum": {
+            "enabled": false,
+            "api": []
+        }
+    },
+    { "asset":"BTC", "coin":"Bitcoin", "eth":false, "fname":"Bitcoin", 
+        "electrum": {
+            "enabled": true,
+            "api": []
+        } 
+    }
+]

@@ -15,12 +15,6 @@ $(function() {
 	var isDebugMode = window.location.port === '63342';
     var isFullWindowMode = isDebugMode || ((StockChartX.Environment.isMobile && $(window).width() < 768) || StockChartX.Environment.isPhone);
 
-    /*var symbolsFilePath = StockChartX.Environment.isMobile ? "data/symbols.mobile.json" : "data/symbols.json";
-    $.get(symbolsFilePath, function(symbols) {
-        console.log(symbols);
-        StockChartX.getAllInstruments = function() { return symbols; }
-    });*/
-
     gChart = $('#chartContainer').StockChartX({
         width: $('#chartContainer').parent().width(),
         height: 360,
@@ -36,7 +30,6 @@ $(function() {
         gChart.addIndicators([myIndicator, TASdk.BollingerBands]);
     }
 
-
     var ind = gChart.addIndicators(StockChartX.VolumeIndicator);
     ind.setParameterValue(StockChartX.IndicatorParam.LINE_WIDTH, 5);
     //ind.chartPanel.setHeightRatio(50/gChart.size.height);
@@ -49,18 +42,19 @@ $(function() {
             gChart.update();
             gChart.hideWaitingBar();
         }, 2000);
-    });
+	});
+	
     gChart.on(StockChartX.ChartEvent.TIME_FRAME_CHANGED, function(event) {
         // TODO: Process time frame change
         console.log(event.value.interval + ' ' + event.value.periodicity);
         console.log(JSON.stringify(event.value));
         sessionStorage.setItem('mm_chartinterval', JSON.stringify(event.value));
         Refresh_active_StockChart();
-    });
+	});
+	
     gChart.on(StockChartX.ChartEvent.MORE_HISTORY_REQUESTED, function() {
         console.log("TODO: Load more history!");
     });
-
 
     if (!StockChartX.Environment.isPhone) {
         // test
@@ -78,13 +72,11 @@ $(function() {
     gChart.setNeedsAutoScale();
     gChart.update();
 
-    !StockChartX.Environment.isMobile && gChart.recordRange(1000);
+	!StockChartX.Environment.isMobile && gChart.recordRange(1000);
+	
 	//gChart.dateScale.customFormat = "HH:mm:ss";
     gChart.update();
     gChart.hideWaitingBar();
-
-
-
 });
 
 $(window).resize(function() {
@@ -100,6 +92,7 @@ function ChartsInstruments(instrument_data){
 		company: instrument_data.company,
 		exchange: "BarterDEX"
 	};
+
 	// gChart.timeInterval = StockChartX.TimeSpan.MILLISECONDS_IN_DAY;
 	gChart.removeDrawings();
 	gChart.setNeedsUpdate(!0);
@@ -141,7 +134,7 @@ function UpdateDexChart(chartbase, chartrel)  {
 
 	var chart_interval = sessionStorage.getItem('mm_chartinterval');
 	chart_interval = JSON.parse(chart_interval);
-	console.log(chart_interval);
+
 	$('.scxTimeFramePicker-button-value').html(chart_interval.interval);
 	$('.scxTimeFramePicker-button-units').html(chart_interval.periodicity);
 
@@ -196,17 +189,21 @@ function UpdateDexChart(chartbase, chartrel)  {
 		}
 	}
 
-	//gChart.showWaitingBar();
-	//clearChartData();
 	gChart.update();
 
 	var userpass = sessionStorage.getItem('mm_userpass');
 	var mypubkey = sessionStorage.getItem('mm_mypubkey');
-	var ajax_data = {"userpass":userpass,"method":"tradesarray","base":chartbase,"rel":chartrel,"timescale":timescal_value,"starttime":0,"endtime":0};
-	//var url = "http://5.9.253.196:7782/api/stats/";
-	var url = "http://127.0.0.1:7783";
-	console.log(ajax_data);
 
+	var ajax_data = { "userpass":userpass,
+					  "method": "tradesarray",
+					  "base": chartbase, 
+					  "rel": chartrel, 
+					  "timescale":timescal_value,
+					  "starttime":0,
+					  "endtime":0 };
+
+	var url = "http://127.0.0.1:7783";
+	
 	$.ajax({
 		async: true,
 	    data: JSON.stringify(ajax_data),

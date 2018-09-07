@@ -5,11 +5,7 @@ function GetLanguageName(language_code) {
 
 	var language_name = '';
 	$.each(langauge_codes_json, function(index, value){
-		//console.log(index);
-		//console.log(value.alpha2);
-		//console.log(value.English);
 		if (language_code == value.alpha2) {
-			//console.log(value.English);
 			language_name = value.English;
 		}
 	});

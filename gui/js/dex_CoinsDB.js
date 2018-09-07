@@ -4,9 +4,9 @@ function BarterDEX_Init_CoinsDB() {
 	//console.log(barterDEX_app_info);
 
 	localStorage.setItem('mm_barterdex_app_info', JSON.stringify(barterDEX_app_info));
+
 	CoinsDB_UpdatedCoinsDbFile()
 	CoinsDB_ManageCoinsJson();
-
 
 	//Populate drop down select coins options in app//
 	$('.trading_pair_coin').html(CoinDB_coin_json_select_options());
@@ -24,43 +24,20 @@ function BarterDEX_Init_CoinsDB() {
 	CoinDB_login_select_options();
 }
 
-function CoinsDB_UpdatedCoinsDbFile() {
-	var update_coinsdb_file = ShepherdIPC({ "command": "coins_db_dl", "data":{"cmd":"update_coins_file"} });
-	//console.log(update_coinsdb_file);
-}
-
-
-function CoinsDB_Dl_Extra(icons_array) {
-	console.log(icons_array);
-	var icons_dl = ShepherdIPC({ "command": "coins_db_dl", "data":{"cmd":"dl_icons","coin_array":icons_array} });
-	var explorers_dl = ShepherdIPC({ "command": "coins_db_dl", "data":{"cmd":"dl_coin_explorers","coin_array":icons_array} });
-	var electrums_dl = ShepherdIPC({ "command": "coins_db_dl", "data":{"cmd":"dl_coin_electrums","coin_array":icons_array} });
-}
-
-
-function CoinsDB_ReadLocalDB() {
-	var local_coinsdb = ShepherdIPC({ "command": "coins_db_read_db" });
-	return local_coinsdb;
-}
-
-//[{"coin": "KMD", "fname": "Komodo","name":"komodo","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}]
-
 function CoinsDB_List(detailed) {
-	if (!detailed) {
-		return ["BTC","ZCR"];
-	}
-
-	return [{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},
-			{"asset":"ZCR","coin":"ZCore","eth":false,"fname":"ZCore","rpcport":17291}]
+	const db = require('../../db/');
+	if (detailed) return db.coins.details;
+	return db.coins.assets;
 }
 
-function CoinsDB_ManageCoinsJson(coins_json_action, coins_json_data) {
+function CoinsDB_ManageCoinsJson(c) {
 	
 	var default_coinsdb_json_array = CoinsDB_List(false);
 
 	switch (coins_json_action) {
 		case 'add':
 			console.log('Adding: ' + coins_json_data);
+
 			if (JSON.parse(localStorage.getItem('mm_coinsdb_json_array')) == null) {
 				console.warn(`localStorage object mm_coinsdb_json_array not found. Creating with default values...`);
 				localStorage.setItem('mm_coinsdb_json_array', JSON.stringify(default_coinsdb_json_array));
@@ -86,6 +63,7 @@ function CoinsDB_ManageCoinsJson(coins_json_action, coins_json_data) {
 				}
 			}
 			break;
+
 		case 'remove':
 			console.log('Removing: ' + coins_json_data);
 			var lstore_coinsdb_json_array = JSON.parse(localStorage.getItem('mm_coinsdb_json_array'));
@@ -99,13 +77,14 @@ function CoinsDB_ManageCoinsJson(coins_json_action, coins_json_data) {
 				console.log(`Coin ${coins_json_data} removed from the local array.`);
 				return lstore_coinsdb_json_array;
 			}
-			
 			break;
+
 		case 'reset':
 			console.log('Resetting localStorage Coins DB array...');
 			localStorage.setItem('mm_coinsdb_json_array', JSON.stringify(default_coinsdb_json_array));
 			CoinsDB_ManageCoinsDetails('reset');
 			return default_coinsdb_json_array;
+			
 		default:
 			console.warn(`No action specified. Executing default action...`);
 			if (JSON.parse(localStorage.getItem('mm_coinsdb_json_array')) == null) {
@@ -122,41 +101,27 @@ function CoinsDB_ManageCoinsJson(coins_json_action, coins_json_data) {
 
 function CoinsDB_ManageCoinsDetails(coins_detail_action) {
 	//TODO
-	var default_coins_detail_list = CoinsDB_List(true);
-	var local_coinsdb = ShepherdIPC({ "command": "coins_db_read_db" });
-	var lstore_coinsdb_json_array = JSON.parse(localStorage.getItem('mm_coinsdb_json_array'));
+	var coin_list = CoinsDB_List(true);
 	switch (coins_detail_action) {
 		case 'gen':
 			console.log(`Generating coins.json file...`);
-			console.log(lstore_coinsdb_json_array);
+			console.log(coin_list);
 			var processed_coins_db = [];
-			$.each(lstore_coinsdb_json_array, function(index, value){
-				//console.log(index);
-				//console.log(value);
-				$.each(local_coinsdb, function(db_index, db_val) {
-					if (db_val.coin == value) {
-						//console.log(db_val);
-						if (db_val.etomic != undefined) {
-							console.log(`${db_val.coin} is ETOMIC`);
-							db_val.eth = true
-							console.log(db_val);
-							processed_coins_db.push(db_val);
-						} else {
-							db_val.eth = false
-							console.log(db_val);
-							processed_coins_db.push(db_val);
-						}
-					}
-				});
+
+			$.each(coin_list, function(index, value){
+				processed_coins_db.push_back(value.details);
 			});
+
 			console.log(processed_coins_db);
-			var update_coins_json_file = ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": processed_coins_db });
+			//var update_coins_json_file = ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": processed_coins_db });
 			//console.log(update_coins_json_file);
 			break;
+
 		case 'reset':
 			console.log('Resetting existing coins.json file...');
-			var update_coins_json_file = ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": [{"asset":"ZCR","coin":"ZCore","eth":false,"fname":"ZCore","rpcport":17291}] });
-		default:
+			//var update_coins_json_file = ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": [{"asset":"ZCR","coin":"ZCore","eth":false,"fname":"ZCore","rpcport":17291}] });
+
+			default:
 			console.log(`Default action. No action selected.`);
 			break;
 		}
@@ -174,7 +139,6 @@ function CoinsDB_GetCoinDetails(coin_code) {
 	var coin_electrums = ShepherdIPC({ "command": "coins_db_read_electrums", "coin": coin_code });
 	var local_coins_json = ShepherdIPC({ "command": "coins_db_read_coins_json" });
 
-	coins_detail_list.pop(1); // Delete ETOMIC before concatinating to avoid duplication.
 	var local_coins_json = local_coins_json.concat(coins_detail_list);
 	var coin_details = '';
 
