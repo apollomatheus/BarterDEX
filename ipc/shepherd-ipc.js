@@ -139,12 +139,9 @@ ipcMain.on('shepherd-command', (event, arg) => {
       }
     break;
 
-    case 'witness_validate_order':
-      break;
-
     case 'witness_update_order':
       if (arg.data)
-      break;
+    break;
 
 
     case 'update_zeroconf_log':

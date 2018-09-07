@@ -76,7 +76,8 @@ $(function() {
 	
 	//gChart.dateScale.customFormat = "HH:mm:ss";
     gChart.update();
-    gChart.hideWaitingBar();
+	gChart.hideWaitingBar();
+	
 });
 
 $(window).resize(function() {
@@ -191,65 +192,45 @@ function UpdateDexChart(chartbase, chartrel)  {
 
 	gChart.update();
 
-	var userpass = sessionStorage.getItem('mm_userpass');
-	var mypubkey = sessionStorage.getItem('mm_mypubkey');
+	//const store = require('../../store');
+	//const witness = require('../../db').witness;
 
-	var ajax_data = { "userpass":userpass,
-					  "method": "tradesarray",
-					  "base": chartbase, 
-					  "rel": chartrel, 
-					  "timescale":timescal_value,
-					  "starttime":0,
-					  "endtime":0 };
-
-	var url = "http://127.0.0.1:7783";
-	
-	$.ajax({
-		async: true,
-	    data: JSON.stringify(ajax_data),
-	    dataType: 'json',
-	    type: 'POST',
-	    url: url
-	}).done(function(dex_chart_output_data) {
-		//console.log(dex_chart_output_data);
-		gChart.setNeedsAutoScaleAll();
-		parseBars(dex_chart_output_data, false);
-	}).fail(function(jqXHR, textStatus, errorThrown) {
-	    // If fail
-	    console.log(textStatus + ': ' + errorThrown);
-	});
+	//witness.getactiveorders(store, "all", (orders) => {
+	//	gChart.setNeedsAutoScaleAll();
+	//	parseBars(orders);
+	//});
 }
 
-function parseBars(data, isIntraday) {
+function parseBars(data) {
     var dataSeries = gChart.barDataSeries();
-    //data.reverse();
-    gChart.showWaitingBar();
-    var newBars = [];
-    $.each(data, function (index, value) {
-        var time = new Date(value[0] * 1000);
+	gChart.showWaitingBar();
+	
+	var newBars = [];
+	
+	var time = new Date(value.ts * 1000);
 
-        if (dataSeries.date.values.length < index) {
-            // if the data received from the API call contains more bars than the chart currently has
-            // those bars should be appended to the chart
-            var newBar = {
-                'date': time,
-                'open': parseFloat(value[1]),
-                'high': parseFloat(value[2]),
-                'low': parseFloat(value[3]),
-                'close': parseFloat(value[4]),
-                'volume': parseInt(value[5], 10),
-            };
-            newBars.push(newBar);
-        } else {
-            // if the bar already exists, just update the data
-            dataSeries.date.values[index] = time;
-            dataSeries.open.values[index] = parseFloat(value[1]);
-            dataSeries.high.values[index] = parseFloat(value[2]);
-            dataSeries.low.values[index] = parseFloat(value[3]);
-            dataSeries.close.values[index] = parseFloat(value[4]);
-            dataSeries.volume.values[index] = parseInt(value[5], 10);
-        }
-    });
+	if (dataSeries.date.values.length < index) {
+		// if the data received from the API call contains more bars than the chart currently has
+		// those bars should be appended to the chart
+		var newBar = {
+			'date': time,
+			'open': 0,
+			'high': 0,
+			'low': 0,
+			'close': 0,
+			'volume': 0,
+		};
+
+		newBars.push(newBar);
+	} else {
+		// if the bar already exists, just update the data
+		dataSeries.date.values[index] = time;
+		dataSeries.open.values[index] = parseFloat(value[1]);
+		dataSeries.high.values[index] = parseFloat(value[2]);
+		dataSeries.low.values[index] = parseFloat(value[3]);
+		dataSeries.close.values[index] = parseFloat(value[4]);
+		dataSeries.volume.values[index] = parseInt(value[5], 10);
+	}
 
     if (newBars.length > 0) {
         gChart.appendBars(newBars);
