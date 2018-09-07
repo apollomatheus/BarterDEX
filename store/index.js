@@ -44,27 +44,100 @@ module.exports = {
         return false;
     },
 
-    addcoin: function(params) {
-        if (this.islogged()) {
-            if (params.coin) {
-                var c = store.get('coins').list;
-                c.push_back(params.coin);
-                store.set('')
-            }
-            return { ok: false, error: "Invalid coin." };
-        }
-        return { ok: false, error: "Not logged" };
-    },
 
     newaddress: function(params) {
         
     },
 
     neworder: function(params) {
+        if (!this.islogged()) {
+            return { error: "Not logged." };
+        }
+        if (params) {
+            if (!params.coin || !params.price || !params.amount) {
+                return { error: "Missing params."  };
+            } else {
+                var coin = params.coin;
+                var price = params.price;
+                var amount = params.amount;
 
+                var ucoin = this.getcoin({coin});
+                if (!ucoin) {
+                    return { error: "This is coin is not in your list."};
+                }
+                if (ucoin.error) {
+                    return { error: ucoin.error };
+                }
+                if (amount < 0.00000000) {
+                    return { error: "Amount is to low."};
+                }
+                if (amount < ucoin.balance) {
+                    return { error: "Amount lower than balance."};
+                }
+
+                var db = require('../db');
+                var crypto = require('crypto');
+                var commonProof = 
+                ucoin.orders.push_back()
+                //after sign this order and proof our common chain
+                //we send it to witnesses ( check min )
+                //they sign, and send it back.
+                //so we can trade it safer later,
+                //cause we'll need to proof that we wont send
+                //orders that dont combine
+                //with previously signed order.
+                return 
+            }
+        } else {
+            return { error: "Invalid params."  };
+        }
+    },
+
+
+    getcoin: function(params) {
+        if (!this.islogged()) {
+            return { error: "Not logged." };
+        }
+        if (!params) {
+            return { error: "Missing params."};
+        }
+        if (!params.coin) {
+            return { error: "Missing coin."};
+        }
+        
+        var list = store.get('coins').list;
+        if (!list) {
+            return false;
+        }
+
+        try {
+            _.each(list, function(err,value) {
+                if (value.asset == params.coin) {
+                    throw value;
+                }
+            });
+        } catch (c) {
+            return c;
+        }   
+        return false;
     },
 
     newcoin: function(params) {
+        if (!this.islogged()) {
+            return { error: "Not logged." };
+        }
+        if (!params) {
+            return { error: "Missing params."};
+        }
+        if (!params.coin) {
+            return { error: "Missing coin."};
+        }
+        
+        var exist = this.getcoin({coin: params.coin});
+        if (!exist.error && exist == true) {
+            return { error: "Coin already listed."};
+        }
+
         var dbcoin = require('../db/').coins;
         _.each(dbcoin.details, function(err, value) {
             if (!err) {
@@ -73,6 +146,7 @@ module.exports = {
                         var lib = require(value.lib);
 
                         if (lib) {
+                            //template
                             var usercoin = {
                                 coin: value.asset,
                                 hdprivkey: null,
@@ -82,10 +156,12 @@ module.exports = {
                                 orders: [],
                                 balance: 0,
                             };
-    
+
+                            //new hd
                             var hdpriv = new lib.HDPrivateKey();
                             var hdpub = hdpriv.hdPublicKey;
 
+                            //last one is the derivation
                             var derived = hdPrivateKey.derive("m/0'/0'/0'/0");
 
                             //address only
@@ -98,6 +174,22 @@ module.exports = {
                             usercoin.hdprivkey = hdpriv;
 
                             usercoin.address.push_back({address,privkey,pubkey});
+
+                            //store in coin list
+                            var list = store.get('coins').list;
+                            if (!list) {
+                                //set new list
+                                store.set('coins', { list: [] });
+
+                                //edit list
+                                list = store.get('coins').list;
+                                list.push_back(usercoin);
+                                store.set('coins', { list });
+                            } else {
+                                list.push_back(usercoin);
+                                store.set('coins', { list });
+                            }
+                            return true;
                         }
                     } 
                 }

@@ -38,6 +38,7 @@
     "ps-node": "^0.1.6",
     "request": "^2.87.0",
     "zcore-lib": "https://github.com/apollomatheus/zcore-lib.git",
-    "store":"https://github.com/apollomatheus/store.js"
+    "store":"https://github.com/apollomatheus/store.js",
+    "crypto" : "crypto"
   }
 }
