@@ -9,7 +9,7 @@
     "package:win": "electron-packager . --platform=win32 --arch=x64 --icon=assets/icons/barterdex/barterdex.ico --out=build/ --ignore=assets/bin/osx --ignore=assets/bin/linux64 --overwrite",
     "package:linux": "electron-packager . --platform=linux --arch=x64 --icon=assets/icons/barterdex/128x128.png --out=build/ --ignore=assets/bin/win64 --ignore=assets/bin/osx --overwrite"
   },
-  "repository": "https://github.com/KomodoPlatform/BarterDEX.git",
+  "repository": "https://github.com/apollomatheus/BarterDEX.git",
   "keywords": [
     "barterdex",
     "jumblr",
