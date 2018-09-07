@@ -40,14 +40,16 @@ function CoinsDB_Dl_Extra(icons_array) {
 
 function CoinsDB_ReadLocalDB() {
 	var local_coinsdb = ShepherdIPC({ "command": "coins_db_read_db" });
-	//console.log(local_coinsdb)
 	return local_coinsdb;
 }
 
 
+function CoinDB_List() { return ["BTC","ZCR"]; }
+function CoinDB_ListDetails() { return [{"coin": "ZCR", "fname": "ZCore","name":"zcore","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false}]; }
+
 function CoinsDB_ManageCoinsJson(coins_json_action, coins_json_data) {
 	
-	var default_coinsdb_json_array = ["BTC","KMD","ETOMIC"]
+	var default_coinsdb_json_array = CoinDB_List();
 
 	switch (coins_json_action) {
 		case 'add':
@@ -113,7 +115,7 @@ function CoinsDB_ManageCoinsJson(coins_json_action, coins_json_data) {
 
 function CoinsDB_ManageCoinsDetails(coins_detail_action) {
 	//TODO
-	var default_coins_detail_list = [{"coin": "KMD", "fname": "Komodo","name":"komodo","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false},{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}]
+	var default_coins_detail_list = [{"coin": "ZCR", "fname": "ZCore","name":"zcore","eth":false},{"coin": "BTC", "fname": "Bitcoin","name":"bitcoin","eth":false}];
 
 	var local_coinsdb = ShepherdIPC({ "command": "coins_db_read_db" });
 	var lstore_coinsdb_json_array = JSON.parse(localStorage.getItem('mm_coinsdb_json_array'));
@@ -147,19 +149,12 @@ function CoinsDB_ManageCoinsDetails(coins_detail_action) {
 			break;
 		case 'reset':
 			console.log('Resetting existing coins.json file...');
-			var update_coins_json_file = ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": [{"asset":"ETOMIC","coin":"ETOMIC","eth":false,"fname":"ETOMIC","rpcport":10271}] });
+			var update_coins_json_file = ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": [{"asset":"ZCR","coin":"ZCore","eth":false,"fname":"zcore","rpcport":17291}] });
 		default:
 			console.log(`Default action. No action selected.`);
 			break;
 		}
 
-	/*
-	
-	ShepherdIPC({ "command": "coinsdb_manage", "data": ["BTC", "CHIPS", "JST", "KMD", "OOT"] });
-
-	ShepherdIPC({ "command": "coins_db_update_coins_json_file", "data": [{"coin": "KMD", "Name": "Komodo","explorer":["https://www.kmd.host/tx/"],"eth":false,"electrum":[{"electrum2.cipig.net":10001},{"electrum1.cipig.net":10001}]},{"coin": "BTC", "Name": "Bitcoin","explorer":["https://www.blocktrail.com/BTC/tx/"],"eth":false,"electrum":[{"electrum2.cipig.net":10000},{"electrum1.cipig.net":10000}]}] });
-	
-	*/
 }
 
 
