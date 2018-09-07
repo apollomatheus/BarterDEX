@@ -4,4 +4,5 @@ module.exports = {
     country: require('./country'),
     chain: require('./chain'),
     witness: require('./witness'),
+    language: require('./language')
 }

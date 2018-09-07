@@ -53,16 +53,16 @@ $('.btn-managecoins_add_to_startup').click(function(e){
 })
 
 function RefreshDEXManageCoinsFn() {
-	var coinsdbdir = JSON.parse(localStorage.getItem('mm_barterdex_app_info')).CoinsDBDir;
-	var lstore_default_coins_list_array = JSON.parse(localStorage.getItem('mm_default_coins_list'));
+	var coin_list = require('../../db').coins.details;
+
 	var default_lang = JSON.parse(sessionStorage.getItem('mm_default_lang'));
+
 	$('.dex_mng_coins_list tbody').empty();
 	var dex_mng_coins_list_tr = '<tr><td>COIN</td><td>MODE</td><td>ACTIONS</td></tr>';
-	$.each(lstore_default_coins_list_array, function(index,value) {
-		//console.log(index);
-		//console.log(value);
-		dex_mng_coins_list_tr += `<tr><td><img src='${coinsdbdir}/icons/${value.coin.toLowerCase()}.png' width='30px;'/> ${CoinsDB_GetCoinDetails(value.coin).fname} (${value.coin})</td><td>${ (value.electrum == false ? "Electrum" : "Native")}</td><td><button class="btn btn-xs btn-danger btn_dex_mng_coins_list_remove" data-coin="${value.coin}">Remove</button></td></tr>`
+	$.each(coin_list, function(index,value) {
+		dex_mng_coins_list_tr += `<tr><td><img src='${value.coin}/icons/${value.coin.toLowerCase()}.png' width='30px;'/> ${value.fname} (${value.coin})</td><td>${ (value.electrum.enabled == false ? "Electrum" : "Native")}</td><td><button class="btn btn-xs btn-danger btn_dex_mng_coins_list_remove" data-coin="${value.coin}">Remove</button></td></tr>`
 	});
+	
 	$('.dex_mng_coins_list tbody').append(dex_mng_coins_list_tr);
 	toastr.info('Default Startup Coins list refreshed', 'DEX Coins Mangement')
 }

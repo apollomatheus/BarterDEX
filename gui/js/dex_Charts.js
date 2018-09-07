@@ -242,9 +242,6 @@ function parseBars(data) {
     gChart.hideWaitingBar();
 }
 
-
-
-
 function Refresh_active_StockChart(sig) {
 	if (sig == false) {
 		clearInterval(Refresh_active_StockChart_Interval);

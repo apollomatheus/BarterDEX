@@ -17,31 +17,19 @@ $(document).ready(function () {
 	BarterDEXInitLang();
 	BarterDEX_Init_CoinsDB();
 
-	///// Get App Version from Shpepherd IPC and update App Title //////
+	const store = require('../../store');
 	var barterDEX_app_info = ShepherdIPC({ "command": "app_info" });
 	document.title = 'ZCoreDEX - ' + barterDEX_app_info.app_version;
 	
 	setTimeout(function () {
-		var mypubkey = sessionStorage.getItem('mm_mypubkey');
-		if (mypubkey !== '739860d6114f01f8bae9e1132945c4d4523a423d97c3573b84d4caf9cb8f0c78') {
-			var loginstate = sessionStorage.getItem('mm_loginstate');
-			if (loginstate == null || loginstate == 'default') {
-				var shepherdresult = ShepherdIPC({ "command": "login", "passphrase": "default" });
-				//Add default login pubkey to sessionStorage
-				sessionStorage.setItem('mm_mypubkey', "739860d6114f01f8bae9e1132945c4d4523a423d97c3573b84d4caf9cb8f0c78");
-				$('.mainbody').hide();
-				$('.loginbody').hide();
-				CheckMM_Interval = setInterval(CheckMMStatus, 1000);
-				$('.loadingbody').fadeIn();
-			} else if (loginstate == 'loggedout') {
-				$('.mainbody').hide();
-				$('.loginbody').fadeIn();
-				$('.loadingbody').fadeOut();
-			}
-		} else {
+		if (loginstate == null || loginstate == 'default' || !store.islogged()) {
 			$('.mainbody').hide();
 			$('.loginbody').fadeIn();
 			$('.loadingbody').fadeOut();
+		} else {
+			$('.mainbody').hide();
+			$('.loginbody').hide();
+			$('.loadingbody').fadeIn();
 		}
 	}, 1000);
 });
@@ -94,20 +82,16 @@ $('.dexlogout-btn').click(function (e) {
 	$('.loadingbody').fadeIn();
 	$('.screen-managecoins').hide();
 
-	var login_data = {};
-	login_data.passphrase = 'default';
-	login_data.netid = 0;
-	login_data.seednode = '';
+	const store = require('../../store');
+	store.logout();
 
-	LoginWithPassphrase(login_data, 'logout');
-
-	CheckPortfolioFn(false);
+	//CheckPortfolioFn(false);
 	CheckOrderBookFn(false);
-	check_swap_status(false);
-	check_bot_list(false);
+	//check_swap_status(false);
+	//check_bot_list(false);
 	check_my_prices(false);
-	bot_screen_coin_balance(false);
-	bot_screen_sellcoin_balance(false);
+	//bot_screen_coin_balance(false);
+	//bot_screen_sellcoin_balance(false);
 
 	check_coin_balance(false);
 	Refresh_active_StockChart(false);
@@ -115,8 +99,8 @@ $('.dexlogout-btn').click(function (e) {
 });
 
 $('.dexdebug-btn').click(function (e) {
-	$('.navbar-right').children().removeClass('active');
-	$('.dexdebug').show();
+	//$('.navbar-right').children().removeClass('active');
+	//$('.dexdebug').show();
 	//$('.dexlogout-btn').hide();
 	//$('.dexdebug-close-btn').show();
 	//$('.dexdebug-btn').hide();
@@ -124,37 +108,37 @@ $('.dexdebug-btn').click(function (e) {
 	//$('.dexdashboard-btn').hide();
 	//$('.dexsettings-btn').hide();
 
-	$('.screen-portfolio').hide();
-	$('.screen-coindashboard').hide();
-	$('.screen-exchange').hide();
-	$('.screen-inventory').hide();
-	$('.screen-managecoins').hide();
+	//$('.screen-portfolio').hide();
+	//$('.screen-coindashboard').hide();
+	//$('.screen-exchange').hide();
+	//$('.screen-inventory').hide();
+	//$('.screen-managecoins').hide();
 
-	$('.navbar-right').children().removeClass('active');
-	$('.dexdebug-btn').parent().addClass("active");
+	//$('.navbar-right').children().removeClass('active');
+	//$('.dexdebug-btn').parent().addClass("active");
 
 
-	CheckPortfolioFn(false);
+	//CheckPortfolioFn(false);
 	CheckOrderBookFn(false);
-	check_swap_status(false);
-	check_bot_list(false);
-	check_my_prices(false);
-	bot_screen_coin_balance(false);
-	bot_screen_sellcoin_balance(false);
+	//check_swap_status(false);
+	//check_bot_list(false);
+	//check_my_prices(false);
+	//bot_screen_coin_balance(false);
+	//bot_screen_sellcoin_balance(false);
 
-	check_coin_balance(false);
+	//check_coin_balance(false);
 	Refresh_active_StockChart(false);
 });
 
 $('.dexdebug-close-btn').click(function (e) {
-	$('.dexdebug').hide();
-	$('.dexdebug-btn').show();
-	$('.dexlogout-btn').show();
-	$('.dexdebug-close-btn').hide();
-	$('.dextradeshistory-btn').show();
-	$('.dexdashboard-btn').show();
-	$('.dexsettings-btn').show();
-	$('.navbar-right').children().removeClass('active');
+	//$('.dexdebug').hide();
+	//$('.dexdebug-btn').show();
+	//$('.dexlogout-btn').show();
+	//$('.dexdebug-close-btn').hide();
+	//$('.dextradeshistory-btn').show();
+	//$('.dexdashboard-btn').show();
+	//$('.dexsettings-btn').show();
+	//$('.navbar-right').children().removeClass('active');
 });
 
 $('.login-genpass-btn').click(function (e) {
@@ -210,6 +194,7 @@ $('.login-genpass-btn').click(function (e) {
 			}
 		}
 	});
+
 	login_gen_pass.init(function () {
 		console.log('dialog opened.')
 		$('.btn_gen_pass_regenpass_login').attr("disabled", "disabled");
@@ -259,16 +244,17 @@ $('.login-genpass-btn').click(function (e) {
 
 $('.login-btn').click(function (e) {
 	e.preventDefault();
+
 	var login_data = {};
 	login_data.passphrase = $('.loginPassphrase').val();
-	login_data.netid = $('.loginNetid').val();
-	login_data.seednode = $('.loginSeednode').val();
+	//login_data.netid = $('.loginNetid').val();
+	//login_data.seednode = $('.loginSeednode').val();
 
-	if (login_data.netid > 14420) {
-		bootbox.alert({
-			message: `<b>Net ID:</b> ${login_data.netid} <br>Net ID can not be bigger than 14420.`
-		});
-	} else {
+	//if (login_data.netid > 14420) {
+	//	bootbox.alert({
+	//		message: `<b>Net ID:</b> ${login_data.netid} <br>Net ID can not be bigger than 14420.`
+	//	});
+	//} else {
 		LoginWithPassphrase(login_data, 'login');
 		//var shepherdresult = ShepherdIPC({"command":"login","passphrase":passphrase});
 		$('.loginPassphrase').val('');
@@ -282,12 +268,12 @@ $('.login-btn').click(function (e) {
 		if (dexmode == 'BarterDEX') {
 			loginBarterdEX();
 		}
-		if (dexmode == 'dICO') {
-			logindICO(dICO_coin);
-		}
+		//if (dexmode == 'dICO') {
+		//	logindICO(dICO_coin);
+		//}
 
 		BarterDEXSettingsFn();
-	}
+	//}
 });
 
 
@@ -456,70 +442,9 @@ function loginBarterdEX() {
 	$('#trading_mode_options_trademanual').attr('checked', 'checked');
 	//ManageDEXCoins();
 }
-
-function logindICO(coin) {
-	console.log('LOGIN TO dICO OPTION SEELCTED.')
-	console.log('COIN SELECTED: ' + coin)
-
-	var default_lang = JSON.parse(sessionStorage.getItem('mm_default_lang'));
-	$('.mainbody').hide();
-	$('.loginbody').hide();
-	$('.btn-exchangeclose').hide();
-	$('.trading_method_options').hide();
-	$('.trading_buysell_options').hide();
-	$('.dexdashboard-btn').hide();
-
-	$('.navbar-brandname').html(return_coin_name(coin) + ' dICO');
-	sessionStorage.setItem('mm_dexmode', 'dICO');
-	sessionStorage.setItem('mm_selected_dICO_coin', coin);
-
-	selected_coin = {}
-	selected_coin.coin = coin;
-	selected_coin.coin_name = return_coin_name(coin);;
-	console.log(selected_coin);
-	sessionStorage.setItem('mm_selectedcoin', JSON.stringify(selected_coin));
-
-	$('.screen-portfolio').hide();
-	$('.screen-coindashboard').hide()
-	$('.screen-exchange').show();
-	$('.coin_ticker').html(coin);
-	$.each($('.coinexchange[data-coin]'), function (index, value) {
-		$('.coinexchange[data-coin]').data('coin', coin);
-	});
-
-	CheckPortfolioFn(false);
-	CheckOrderBookFn();
-	CheckOrderbook_Interval = setInterval(CheckOrderBookFn, 30000);
-	check_swap_status_Interval = setInterval(check_swap_status, 20000);
-	check_swap_status();
-	check_bot_list_Interval = setInterval(check_bot_list, 10000);
-	check_bot_list();
-	check_my_prices_Interval = setInterval(check_my_prices, 60000);
-	check_my_prices();
-	bot_screen_coin_balance_Interval = setInterval(bot_screen_coin_balance, 30000);
-	bot_screen_coin_balance();
-	bot_screen_sellcoin_balance_Interval = setInterval(bot_screen_sellcoin_balance, 30000);
-	bot_screen_sellcoin_balance();
-	Refresh_active_StockChart_Interval = setInterval(Refresh_active_StockChart, 60000);
-	Refresh_active_StockChart();
-
-	$('#trading_mode_options_trademanual').trigger('click');
-	$('#trading_mode_options_tradebot').removeAttr("checked");
-	$('#trading_mode_options_trademanual').attr('checked', 'checked');
-	$('.trading_method_options').hide();
-	$('.trading_buysell_options').hide();
-	$('.trading_pair_coin_autoprice_mode_span').hide();
-	$('#trading_pair_coin_autoprice_mode').bootstrapToggle('on')
-	$('#trading_pair_coin_price_max_min').html(`${default_lang.Exchange.exchange_lbl_one_max}`);
-
-	var charts_instruments_data = {}
-	charts_instruments_data.symbol = coin + '/KMD'
-	charts_instruments_data.company = 'Komodo Platform';
-	ChartsInstruments(charts_instruments_data)
-	UpdateDexChart(coin, 'KMD');
-}
-
+/*
 CheckMMStatus = function (sig) {
+
 	if (sig == false) {
 		clearInterval(CheckMM_Interval);
 	} else {
@@ -562,10 +487,9 @@ CheckMMStatus = function (sig) {
 		$('.mainbody').hide();
 		$('.loginbody').hide();
 		$('.loadingbody').fadeIn();
-	}*/
-}
-
-
+	}
+}*/
+/*
 CheckDefaultLogin = function (sig) {
 	if (sig == false) {
 		clearInterval(CheckDefaultLogin_Interval);
@@ -619,75 +543,47 @@ CheckDefaultLogin = function (sig) {
 	    // If fail
 	    console.log(textStatus + ': ' + errorThrown);
 	});
-	*/
-}
+	
+}*/
 
 
 LoginWithPassphrase = function (login_passphrase_data, action_mode) {
 	console.log('Login using passphrase from Login form input');
 	//console.log(login_passphrase_data);
+	const store = require('../../store');
 
-	var userpass = '';
-	if (sessionStorage.getItem('mm_loginstate') == 'loggedin') {
-		var userpass = sessionStorage.getItem('mm_userpass');
-	} else {
-		var userpass = '1d8b27b21efabcd96571cd56f91a40fb9aa4cc623d273c63bf9223dc6f8cd81f';
+	if (store.islogged()) {
+		return;
 	}
 
-	var ajax_data = { "userpass": userpass, "method": "passphrase", "passphrase": login_passphrase_data.passphrase, "gui": "simplegui" };
-
-	if (login_passphrase_data.netid == 0) {
-		console.log(login_passphrase_data.netid);
-		delete ajax_data.netid;
-		delete ajax_data.seednode;
-	} else {
-		console.log('Net ID: ' + login_passphrase_data.netid);
-		console.log('Seed Node IP: ' + login_passphrase_data.seednode);
-		ajax_data.netid = login_passphrase_data.netid;
-		ajax_data.seednode = login_passphrase_data.seednode;
-	}
-	//console.log(ajax_data)
-	var url = "http://127.0.0.1:7783";
-
-	$.ajax({
-		async: true,
-		data: JSON.stringify(ajax_data),
-		dataType: 'json',
-		type: 'POST',
-		url: url
-	}).done(function (data) {
-		// If successful
-		console.log(data);
-
-		sessionStorage.setItem('mm_usercoins', JSON.stringify(data.coins));
-		sessionStorage.setItem('mm_userpass', data.userpass);
-		sessionStorage.setItem('mm_mypubkey', data.mypubkey);
-
-		if (action_mode == 'login') {
-			sessionStorage.setItem('mm_loginstate', 'loggedin');
+	switch(action_mode) {
+		case 'login':
+		{
 			$('.mainbody').fadeIn();
 			$('.loginbody').fadeOut();
 			$('.loadingbody').hide();
 
-			CheckPortfolio_Interval = setInterval(CheckPortfolioFn, 60000);
+			store.login({password: login_passphrase_data.passphrase});
 			ManageDEXCoins('enable', null);
 			CheckPortfolioFn();
+			break;
 		}
 
-		if (action_mode == 'logout') {
-			sessionStorage.setItem('mm_loginstate', 'loggedout');
-			sessionStorage.removeItem('mm_usercoins');
-			sessionStorage.removeItem('mm_selectedcoin');
+		case 'logout':
+		{
 			$('.mainbody').fadeOut();
 			$('.loginbody').fadeIn();
 			$('.loadingbody').hide();
+
+			store.logout();
+			ManageDEXCoins('enable', null);
+			CheckPortfolioFn();
+			break;
 		}
 
-
-	}).fail(function (jqXHR, textStatus, errorThrown) {
-		// If fail
-		console.log(textStatus + ': ' + errorThrown);
-	});
+		default:
+		break;
+	}
 }
 
 
@@ -727,50 +623,19 @@ function ManageDEXCoins(mng_coin_action, mng_coins_data) {
 	console.log(mng_coin_action);
 	//console.log(mng_coins_data);
 
-	var default_coins_list_array = [{ coin: "KMD", electrum: false, method: "enable" }]
+	const coins = require('../../db').coins.details;
 
 	switch (mng_coin_action) {
 		case 'enable':
-			if (JSON.parse(localStorage.getItem('mm_default_coins_list')) == null) {
-				localStorage.setItem('mm_default_coins_list', JSON.stringify(default_coins_list_array));
-				enable_disable_coin(default_coins_list_array[0])
-			} else {
-				var lstore_default_coins_list_array = JSON.parse(localStorage.getItem('mm_default_coins_list'));
+		break;
 
-				$.each(lstore_default_coins_list_array, function (index, val) {
-					console.log(index);
-					console.log(val);
-					enable_disable_coin(val);
-				})
-			}
-			break;
 		case 'add':
-			console.log(mng_coins_data);
-			var lstore_default_coins_list_array = JSON.parse(localStorage.getItem('mm_default_coins_list'));
-			console.log(lstore_default_coins_list_array);
-			lstore_default_coins_list_array.push(mng_coins_data);
-			localStorage.setItem('mm_default_coins_list', JSON.stringify(lstore_default_coins_list_array));
-			break;
-		case 'remove':
-			console.log(mng_coins_data);
-			var lstore_default_coins_list_array = JSON.parse(localStorage.getItem('mm_default_coins_list'));
-			lstore_default_coins_list_array = _.without(lstore_default_coins_list_array, _.findWhere(lstore_default_coins_list_array, { coin: mng_coins_data.coin }));
-			console.log(lstore_default_coins_list_array);
-			localStorage.setItem('mm_default_coins_list', JSON.stringify(lstore_default_coins_list_array));
-			break;
-		default:
-			if (JSON.parse(localStorage.getItem('mm_default_coins_list')) == null) {
-				localStorage.setItem('mm_default_coins_list', JSON.stringify(default_coins_list_array));
-				enable_disable_coin(default_coins_list_array[0])
-			} else {
-				var lstore_default_coins_list_array = JSON.parse(localStorage.getItem('mm_default_coins_list'));
+		break;
 
-				$.each(lstore_default_coins_list_array, function (index, val) {
-					console.log(index);
-					console.log(val);
-					enable_disable_coin(val);
-				})
-			}
+		case 'remove':
+		break;
+
+		default:
 	}
 }
 

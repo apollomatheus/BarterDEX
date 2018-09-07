@@ -33,12 +33,9 @@ $(document).ready(function() {
 			break;
 	}
 	/* End OS Changes */
-	/* Because grrr */ 
-	sessionStorage.setItem('mm_chartinterval', JSON.stringify({ "periodicity": "h", "interval": 1 })); 
-	/* End Because grrr */ 
 	$('.loginbody').css('height',$(window).height())
-	var mmstatus = ShepherdIPC({"command":"mmstatus"});
-	if (mmstatus !== 'closed') {
+	var logged = ShepherdIPC({"command":"islogged"});
+	if (!logged) {
 		var default_lang = JSON.parse(sessionStorage.getItem('mm_default_lang'));
 		var mypubkey = sessionStorage.getItem('mm_mypubkey');
 		var loginstate = sessionStorage.getItem('mm_loginstate');
